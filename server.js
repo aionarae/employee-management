@@ -76,9 +76,7 @@ function handleChoice(choice) {
     case 'View all roles':
       query = 'SELECT id, title, salary, department_id FROM role';
       break;
-    // View all employees showing id, first_name, last_name, role_id, and manager_id
-    // including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
-
+    // View all employees showing employee ids, first names, last names, job titles, departments, salaries, and manager
     case 'View all employees':
       query = `SELECT
         employee.id AS employee_id,
@@ -99,10 +97,58 @@ function handleChoice(choice) {
       break;
     // Add a department
     case 'Add a department':
-      console.log('Add a department');
-      return;
+      inquirer.prompt([
+        {
+          type: 'input',
+          name: 'departmentName',
+          message: 'Enter the name of the department'
+        }
+      ])
+      .then((answer) => {
+        // Use answer.departmentName here
+        console.log(answer.departmentName);
+        query = 'INSERT INTO department (name) VALUES ($1)';
+        pool.query(query, [answer.departmentName], (err, res) => {
+          if (err) {
+            console.error(err.message);
+            return;
+          }
+          console.log('Department added');
+          executeQuery('SELECT * FROM department');
+        });
+      });
+      break;
     case 'Add a role':
       console.log('Add a role');
+      inquirer.prompt([ 
+        {
+          type: 'input', 
+          name: 'roleName', 
+          message: 'Enter the name of the role'},
+        {
+          type: 'input',
+          name: 'salary',
+          message: 'Enter the salary for the role'
+        },
+        {
+          type: 'input',
+          name: 'departmentId',
+          message: 'Enter the department id for the role'
+        }
+        ]).then((answer) => {
+          console.log(answer.roleName);
+          console.log(answer.salary);
+          console.log(answer.departmentId);
+          query = 'INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)';
+          pool.query(query, [answer.roleName, answer.salary, answer.departmentId], (err, res) => {
+            if (err) {
+              console.error(err.message);
+              return;
+            }
+            console.log('Role added');
+            executeQuery('SELECT * FROM role');
+        })
+      });
       return;
     case 'Add an employee':
       console.log('Add an employee');
