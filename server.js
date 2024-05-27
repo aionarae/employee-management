@@ -112,14 +112,16 @@ function handleChoice(choice) {
           if (err) {
             console.error(err.message);
             return;
-          }
+          } 
           console.log('Department added');
           executeQuery('SELECT * FROM department');
         });
       });
-      break;
+      return;
+    // add a role
+    // prompt: the name, salary, and department for the role 
+    // that role is added to the database
     case 'Add a role':
-      console.log('Add a role');
       inquirer.prompt([ 
         {
           type: 'input', 
@@ -144,18 +146,109 @@ function handleChoice(choice) {
             if (err) {
               console.error(err.message);
               return;
-            }
+            } else if (res.rowCount === 0) {
+              console.log('Department not found');
+              return;
+            } else {
             console.log('Role added');
             executeQuery('SELECT * FROM role');
+            }
         })
       });
       return;
+    // add an employee
+    // prompt: Temployee’s first name, last name, role, and manager, 
+    // add employee to the database
     case 'Add an employee':
-      console.log('Add an employee');
+      inquirer.prompt([
+        {
+          type: 'input',
+          name: 'firstName',
+          message: 'Enter the employee\'s first name'
+        },
+        {
+          type: 'input',
+          name: 'lastName',
+          message: 'Enter the employee\'s last name'
+        },
+        {
+          type: 'input',
+          name: 'roleId',
+          message: 'Enter the role id for the employee'
+        },
+        {
+          type: 'input',
+          name: 'managerId',
+          message: 'Enter the manager id for the employee'
+        }
+      ]).then((answer) => {
+        console.log(answer.firstName);
+        console.log(answer.lastName);
+        console.log(answer.roleId);
+        console.log(answer.managerId);
+        // if manager id can't be found in the database, console.log('Manager not found')
+        managerId = answer.managerId;
+        managerQuery = 'SELECT * FROM employee WHERE id = $1';
+        pool.query(managerQuery, [managerId], (err, res) => {
+          if (err) {
+            console.error(err.message);
+            return;
+          } else if (res.rowCount === 0) {
+            console.log('Manager not found');
+            return;
+          }
+        });
+        query = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)';
+        pool.query(query, [answer.firstName, answer.lastName, answer.roleId, answer.managerId], (err, res) => {
+
+        
+          if (err) {
+            console.error(err.message);
+            return;
+          } else if (res.rowCount === 0) {
+            console.log('Role not found');
+            return;
+          } else {
+          console.log('Employee added');
+          executeQuery('SELECT * FROM employee');
+          }
+        });
+      }, (error) => console.log(error));
       return;
+      // update an employee role
+      // select employee to update and their new role 
+      // and this information is updated in the database
     case 'Update an employee role':
-      console.log('Update an employee role');
+      inquirer.prompt([
+        {
+          type: 'input',
+          name: 'employeeId',
+          message: 'Enter the id of the employee to update'
+        },
+        {
+          type: 'input',
+          name: 'newRoleId',
+          message: 'Enter the new role id for the employee'
+        }
+      ]).then((answer) => {
+        console.log(answer.employeeId);
+        console.log(answer.newRoleId);
+        query = 'UPDATE employee SET role_id = $1 WHERE id = $2';
+        pool.query(query, [answer.newRoleId, answer.employeeId], (err, res) => {
+          if (err) {
+            console.error(err.message);
+            return;
+          } else if (res.rowCount === 0) {
+            console.log('Employee not found');
+            return;
+          } else {
+          console.log('Employee role updated');
+          executeQuery('SELECT * FROM employee');
+          }
+        });
+      });
       return;
+
     default:
       console.log('Invalid choice');
       return;
@@ -170,23 +263,18 @@ promptUser()
   .then((answers) => handleChoice(answers.choices))
   .catch((error) => console.log(error));
 
-// view all employees
-// returns table with employee data, 
-// including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
+
 
 // add a department
 // prompt: enter the name of the department 
 // add that department to the database
 
-// add a role
-// prompt: the name, salary, and department for the role 
-// that role is added to the database
-
-// add an employee
-// prompt: Temployee’s first name, last name, role, and manager, 
-// add employee to the database
 
 
-// update an employee role
-// select employee to update and their new role 
-// and this information is updated in the database
+// Bonus:
+// Update employee managers.
+// View employees by manager.
+//View employees by department.
+//Delete departments, roles, and employees.
+//View the total utilized budget of a department—in other words, the combined salaries of all employees in that department.
+
